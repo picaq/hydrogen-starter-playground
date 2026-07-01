@@ -45,13 +45,24 @@ export default {
       });
 
       /**
+       * Create Sanity's client for fetching CMS page content.
+       */
+      const sanity = createClient({
+        projectId: env.SANITY_PROJECT_ID,
+        dataset: env.SANITY_DATASET || 'production',
+        apiVersion: env.SANITY_API_VERSION || '2023-06-01',
+        token: env.SANITY_TOKEN,
+        useCdn: true,
+      });
+
+      /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
        */
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env}),
+        getLoadContext: () => ({session, storefront, sanity, env}),
       });
 
       const response = await handleRequest(request);

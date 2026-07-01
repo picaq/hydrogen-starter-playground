@@ -1,12 +1,13 @@
 import {json} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
+import groq from 'groq';
 
 import PageComponentList from '~/components/PageComponentList'
 
 const seo = ({data}) => ({
-  title: data?.page?.seo?.title,
-  description: data?.page?.seo?.description,
+  title: data?.sanityPage?.seo?.title || data?.page?.seo?.title,
+  description: data?.sanityPage?.seo?.description || data?.page?.seo?.description,
 });
 
 export const handle = {
@@ -16,19 +17,22 @@ export const handle = {
 export async function loader({request, params, context}) {
   invariant(params.pageHandle, 'Missing page handle');
 
-  const {page} = await context.storefront.query(PAGE_QUERY, {
-    variables: {
-      handle: params.pageHandle,
-      language: context.storefront.i18n.language,
-    },
-  });
+  const [{page}, sanityPage] = await Promise.all([
+    context.storefront.query(PAGE_QUERY, {
+      variables: {
+        handle: params.pageHandle,
+        language: context.storefront.i18n.language,
+      },
+    }),
+    context.sanity.fetch(SANITY_PAGE_QUERY, {handle: params.pageHandle}),
+  ]);
 
-  if (!page) {
+  if (!page && !sanityPage) {
     throw new Response(null, {status: 404});
   }
 
   return json(
-    {page},
+    {page, sanityPage},
     {
       headers: {
         // TODO cacheLong()
@@ -70,5 +74,15 @@ const PAGE_QUERY = `#graphql
         title
       }
     }
+  }
+`;
+
+const SANITY_PAGE_QUERY = groq`
+  *[_type == "page" && slug.current == $handle][0]{
+    title,
+    seo,
+    modules[]{
+      ...,
+    },
   }
 `;

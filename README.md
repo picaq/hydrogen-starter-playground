@@ -45,6 +45,21 @@ Once you have a store, generate a Storefront API token:
 
 Fill both values into `.env` (see `.env.sample` for the full list of variables).
 
+### Setting up Sanity CMS
+
+CMS-authored pages (`/pages/:pageHandle`) are backed by [Sanity](https://www.sanity.io). Content is fetched by a `page` document whose `slug.current` matches the route's `pageHandle`, and rendered as a list of modules (see `app/components/PageComponentList.jsx` and `app/components/modules/`).
+
+If you don't already have a Sanity project:
+
+1. Go to [sanity.io/manage](https://www.sanity.io/manage) and sign up for a free account.
+2. Create a new project, then create a dataset on it (e.g. `production`).
+3. Note the **Project ID** shown in the project settings — this is your `SANITY_PROJECT_ID`.
+4. Under **API → Tokens**, click **Add API token**, give it a name, and choose the **Viewer** role (or **Editor** if you'll be writing content via API/script rather than a Studio). Copy the generated token — this is your `SANITY_TOKEN`.
+
+Fill `SANITY_PROJECT_ID`, `SANITY_DATASET`, and `SANITY_TOKEN` into `.env` (see `.env.sample`).
+
+This starter doesn't include a Sanity Studio for authoring content — you'll need to either stand one up (`npm create sanity@latest`) with a `page` document type (fields: `title`, `slug`, `seo`, `modules[]`) and a `module.hero` object type (fields: `heading`, `subheading`, `body`), or create/edit documents directly via the [Sanity API](https://www.sanity.io/docs/http-api) or CLI. New module types need a matching React component registered in `app/components/PageComponentList.jsx`'s `COMPONENTS` map.
+
 Accessing graphQL viewer [https://localhost:3000/graphiql](https://localhost:3000/graphiql)
 
 ## Local development
